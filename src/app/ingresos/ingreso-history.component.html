@@ -1,0 +1,253 @@
+<section class="min-h-screen bg-slate-100 p-4 sm:p-5">
+  <header class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Historial de Ingresos</h1>
+      <p class="text-sm text-slate-500">
+        Sucursal activa: {{ selectedSucursalName() }} | Filtro fecha: {{ filtroFechaLabel() }}
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        class="h-10 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+        (click)="requestCreate()"
+      >
+        Crear Ingreso
+      </button>
+
+      @if (filterMode() === 'single') {
+        <input
+          type="date"
+          class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm"
+          [value]="singleDate()"
+          (change)="onSingleDateChange($event)"
+        />
+      } @else {
+        <input
+          type="date"
+          class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm"
+          [value]="rangeStartDate()"
+          (change)="onRangeStartDateChange($event)"
+        />
+
+        <input
+          type="date"
+          class="h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 shadow-sm"
+          [value]="rangeEndDate()"
+          (change)="onRangeEndDateChange($event)"
+        />
+      }
+
+      <button
+        type="button"
+        class="h-10 rounded-lg px-4 text-sm font-semibold transition"
+        [class.bg-rose-300]="filterMode() === 'range'"
+        [class.text-slate-900]="filterMode() === 'range'"
+        [class.bg-slate-200]="filterMode() !== 'range'"
+        [class.text-slate-700]="filterMode() !== 'range'"
+        (click)="toggleRangeMode()"
+      >
+        Rango
+      </button>
+
+      <button
+        type="button"
+        class="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        (click)="setTodayBolivia()"
+      >
+        Hoy
+      </button>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div
+      class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+    >
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <header
+      class="grid grid-cols-[1.4fr_1.4fr_1fr_1fr_auto] items-center gap-3 border-b border-slate-100 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400"
+    >
+      <span>Fecha y Hora</span>
+      <span>Destino</span>
+      <span>Materiales</span>
+      <span>Total</span>
+      <span class="text-right">Acciones</span>
+    </header>
+
+    @if (isLoading()) {
+      <div class="px-5 py-5 text-sm font-medium text-slate-500">
+        Cargando historial de ingresos...
+      </div>
+    } @else {
+      @for (ingreso of ingresos(); track trackByIngreso($index, ingreso)) {
+        <article
+          class="grid grid-cols-[1.4fr_1.4fr_1fr_1fr_auto] items-center gap-3 border-b border-slate-100 px-5 py-4"
+          [class.bg-slate-100]="isIngresoExpanded(ingreso.id_ingreso)"
+        >
+          <div class="leading-tight">
+            <p class="text-lg font-bold text-slate-900">{{ formatFecha(ingreso.fecha_hora) }}</p>
+            <p class="mt-1 text-sm font-medium text-slate-500">
+              {{ formatHora(ingreso.fecha_hora) }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <svg
+              class="h-4 w-4 shrink-0 text-blue-600"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 21s7.5-5.02 7.5-11.25a7.5 7.5 0 1 0-15 0C4.5 15.98 12 21 12 21Zm0-8.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z"
+              ></path>
+            </svg>
+            <p class="text-base font-semibold leading-tight text-slate-700">
+              {{ ingreso.nombre_sucursal }}
+            </p>
+          </div>
+
+          <div>
+            <span
+              class="inline-flex rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700"
+            >
+              {{ formatCantidadMateriales(ingreso.cant_materiales) }}
+            </span>
+          </div>
+
+          <div>
+            <p class="text-base font-bold text-slate-800">{{ formatTotal(ingreso.total) }}</p>
+          </div>
+
+          <div class="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+              [class.bg-blue-600]="isIngresoExpanded(ingreso.id_ingreso)"
+              [class.text-white]="isIngresoExpanded(ingreso.id_ingreso)"
+              [class.hover:bg-blue-700]="isIngresoExpanded(ingreso.id_ingreso)"
+              [class.text-blue-700]="!isIngresoExpanded(ingreso.id_ingreso)"
+              [class.hover:bg-blue-50]="!isIngresoExpanded(ingreso.id_ingreso)"
+              (click)="toggleDetalle(ingreso)"
+            >
+              {{ isIngresoExpanded(ingreso.id_ingreso) ? 'Ocultar' : 'Ver Detalle' }}
+            </button>
+
+            <button
+              type="button"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
+              title="Modificar ingreso"
+              aria-label="Modificar ingreso"
+              (click)="requestEdit(ingreso)"
+            >
+              <svg
+                class="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+                ></path>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
+              title="Eliminar ingreso"
+              aria-label="Eliminar ingreso"
+              (click)="requestDelete(ingreso)"
+            >
+              <svg
+                class="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"
+                ></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        @if (isIngresoExpanded(ingreso.id_ingreso)) {
+          <section class="border-b border-slate-100 bg-white px-5 py-5">
+            @if (isDetalleLoading(ingreso.id_ingreso)) {
+              <p class="text-sm font-medium text-slate-500">Cargando detalle del ingreso...</p>
+            } @else if (getDetalleErrorById(ingreso.id_ingreso); as detalleError) {
+              <p class="text-sm font-medium text-red-600">{{ detalleError }}</p>
+            } @else {
+              <div class="mb-4 flex items-center gap-2">
+                <span class="h-5 w-1.5 rounded-full bg-blue-600"></span>
+                <h3 class="text-lg font-bold text-slate-800">Desglose de Materiales Ingresados</h3>
+              </div>
+
+              @if (getIngresoDetalleById(ingreso.id_ingreso).length === 0) {
+                <p class="text-sm font-medium text-slate-500">
+                  Este ingreso no tiene detalles de materiales.
+                </p>
+              } @else {
+                <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  @for (
+                    detalle of getIngresoDetalleById(ingreso.id_ingreso);
+                    track trackByDetalle($index, detalle)
+                  ) {
+                    <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                        Material
+                      </p>
+                      <p class="mt-1.5 text-xl font-bold leading-tight text-slate-900">
+                        {{ detalle.nombre }}
+                      </p>
+                      <p class="mt-1 text-sm font-medium text-slate-500">
+                        {{ detalle.nombre_categoria }}
+                      </p>
+
+                      <div class="mt-4 flex items-end justify-between gap-3">
+                        <p class="text-sm text-slate-500">
+                          Cant:
+                          <span class="font-bold text-slate-900">{{ detalle.cantidad }}</span>
+                        </p>
+
+                        <p class="text-sm text-slate-500">
+                          Costo:
+                          <span class="font-bold text-slate-900">{{
+                            formatCostoUnitario(detalle.costo_unitario)
+                          }}</span>
+                        </p>
+                      </div>
+                    </article>
+                  }
+                </div>
+              }
+            }
+          </section>
+        }
+      }
+
+      @if (!isLoading() && ingresos().length === 0) {
+        <div class="px-5 py-8 text-center text-sm font-medium text-slate-500">
+          No se encontraron ingresos para la sucursal y fecha seleccionadas.
+        </div>
+      }
+    }
+  </section>
+</section>

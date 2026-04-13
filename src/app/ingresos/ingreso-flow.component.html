@@ -1,0 +1,97 @@
+<section class="relative">
+  @if (viewMode() === 'history') {
+    <app-ingreso-history
+      (createRequested)="openCreateForm()"
+      (editRequested)="openEditForm($event)"
+      (deleteRequested)="deleteIngreso($event)"
+    ></app-ingreso-history>
+  } @else {
+    <app-ingreso-register
+      [mode]="registerMode()"
+      [initialItems]="draftItems()"
+      [editingIngresoId]="editingIngresoId()"
+      [fixedSucursalId]="fixedSucursalId()"
+      (cancel)="returnToHistory()"
+      (saved)="handleSaved($event)"
+    ></app-ingreso-register>
+  }
+
+  @if (loadingEditData() || deletingIngresoId()) {
+    <div
+      class="absolute inset-0 z-30 flex items-center justify-center rounded-2xl bg-slate-900/25 backdrop-blur-[1px]"
+    >
+      <div class="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-lg">
+        {{ loadingEditData() ? 'Cargando detalle del ingreso...' : 'Eliminando ingreso...' }}
+      </div>
+    </div>
+  }
+
+  @if (toast(); as toastData) {
+    <div class="fixed right-6 top-24 z-40 w-full max-w-sm">
+      <div
+        class="rounded-xl border px-4 py-3 shadow-lg"
+        [class.border-emerald-200]="toastData.kind === 'success'"
+        [class.bg-emerald-50]="toastData.kind === 'success'"
+        [class.text-emerald-800]="toastData.kind === 'success'"
+        [class.border-red-200]="toastData.kind === 'error'"
+        [class.bg-red-50]="toastData.kind === 'error'"
+        [class.text-red-800]="toastData.kind === 'error'"
+      >
+        <div class="flex items-start gap-3">
+          <div
+            class="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+            [class.bg-emerald-100]="toastData.kind === 'success'"
+            [class.text-emerald-700]="toastData.kind === 'success'"
+            [class.bg-red-100]="toastData.kind === 'error'"
+            [class.text-red-700]="toastData.kind === 'error'"
+          >
+            @if (toastData.kind === 'success') {
+              <svg
+                class="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13.5 9.5 18 19 8"></path>
+              </svg>
+            } @else {
+              <svg
+                class="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6 6l12 12M18 6 6 18"
+                ></path>
+              </svg>
+            }
+          </div>
+
+          <p class="flex-1 text-sm font-medium leading-5">{{ toastData.message }}</p>
+
+          <button
+            type="button"
+            class="inline-flex h-6 w-6 items-center justify-center rounded-md text-current/70 transition hover:bg-black/5 hover:text-current"
+            (click)="clearToast()"
+            aria-label="Cerrar notificacion"
+          >
+            <svg
+              class="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

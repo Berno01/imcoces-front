@@ -1,0 +1,172 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <section class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+    <header class="mb-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Techito Registro</p>
+        <h2 class="text-3xl font-bold text-slate-900">Gestion de Material</h2>
+      </div>
+
+      <button
+        type="button"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+        (click)="close()"
+      >
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"></path>
+        </svg>
+      </button>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form class="space-y-5" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Codigo unico</label>
+          <input
+            type="text"
+            class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            placeholder="MT-9042"
+            formControlName="codigo"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nombre del material</label>
+          <input
+            type="text"
+            class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            placeholder="Ej: Cemento Portland IP-30"
+            formControlName="nombre"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Categoria</label>
+          <app-smart-select
+            [items]="categoriaItems()"
+            displayKey="label"
+            valueKey="id_categoria"
+            placeholder="Seleccionar categoria..."
+            [selectedValue]="form.controls.id_categoria.value"
+            (selectionChange)="handleCategoriaSelection($event)"
+            (onCreate)="createCategoria($event)"
+            (onUpdate)="updateCategoria($event)"
+            (onDelete)="deleteCategoria($event)"
+          ></app-smart-select>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Color del material</label>
+          <app-smart-select
+            [items]="colorItems()"
+            displayKey="label"
+            valueKey="id_color"
+            [showColorSwatch]="true"
+            placeholder="Seleccionar tono representativo"
+            [selectedValue]="form.controls.id_color.value"
+            (selectionChange)="handleColorSelection($event)"
+            (onCreate)="createColor($event)"
+            (onUpdate)="updateColor($event)"
+            (onDelete)="deleteColor($event)"
+          ></app-smart-select>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Costo base (Bs)</label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            formControlName="costo"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Precio de venta (Bs)</label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            formControlName="precio"
+          />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Medida</label>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            formControlName="medida"
+          />
+        </div>
+
+        <div class="flex items-end">
+          <label class="mb-2 inline-flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              formControlName="is_reciclado"
+            />
+            Material reciclado
+          </label>
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-sm font-semibold text-amber-800">Control de Fecha de Vencimiento</p>
+            <p class="text-xs text-amber-700">Activar alertas para materiales perecederos.</p>
+          </div>
+
+          <label class="relative inline-flex cursor-pointer items-center">
+            <input type="checkbox" class="peer sr-only" formControlName="has_vencimiento" />
+            <span class="h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-amber-500"></span>
+            <span class="absolute left-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span>
+          </label>
+        </div>
+
+        @if (form.controls.has_vencimiento.value) {
+          <div class="mt-4">
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Fecha de vencimiento</label>
+            <input
+              type="date"
+              class="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm focus:ring-2 focus:ring-blue-500"
+              formControlName="fecha_vencimiento"
+            />
+          </div>
+        }
+      </div>
+
+      <footer class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
+        <button
+          type="button"
+          class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+          (click)="close()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+          [disabled]="form.invalid || isSaving() || isLoadingCatalogs()"
+        >
+          @if (isSaving()) {
+            Guardando...
+          } @else {
+            Guardar Material
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

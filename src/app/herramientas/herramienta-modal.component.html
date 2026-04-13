@@ -1,0 +1,125 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <section class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
+    <header class="mb-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
+          Material Manager
+        </p>
+        <h2 class="text-4xl font-bold text-slate-900">
+          {{ herramientaToEdit ? 'Editar Herramienta' : 'Nueva Herramienta' }}
+        </h2>
+      </div>
+
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-300">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 3h6v6M9 21H3v-6M21 3l-7.5 7.5M3 21l7.5-7.5"
+          ></path>
+        </svg>
+      </div>
+    </header>
+
+    @if (errorMessage()) {
+      <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form class="space-y-6" [formGroup]="form" (ngSubmit)="submit()">
+      <div>
+        <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Nombre de la Herramienta
+        </label>
+        <input
+          type="text"
+          class="h-12 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 text-sm text-slate-700 focus:ring-2 focus:ring-blue-500"
+          placeholder="Ej. Taladro Percutor Industrial"
+          formControlName="nombre"
+        />
+      </div>
+
+      <div>
+        <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Categoria
+        </label>
+        <app-smart-select
+          [items]="categoriaItems()"
+          displayKey="label"
+          valueKey="id_categoria_herramienta"
+          placeholder="Seleccionar categoria..."
+          [selectedValue]="form.controls.id_categoria_herramienta.value"
+          (selectionChange)="handleCategoriaSelection($event)"
+          (onCreate)="createCategoriaHerramienta($event)"
+          (onUpdate)="updateCategoriaHerramienta($event)"
+          (onDelete)="deleteCategoriaHerramienta($event)"
+        ></app-smart-select>
+      </div>
+
+      <section class="rounded-xl border border-amber-200 bg-amber-50/70 p-4" formArrayName="stocks">
+        <div class="mb-3 flex items-center gap-2 text-slate-800">
+          <svg
+            class="h-5 w-5 text-amber-700"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 3 4 9h16l-8-6Zm7 7H5v9h14v-9ZM9 14h6"
+            ></path>
+          </svg>
+          <h3 class="text-2xl font-semibold">Stock por Sucursal</h3>
+          @if (isLoadingStock()) {
+            <span class="text-xs font-semibold uppercase tracking-wide text-amber-700"
+              >Cargando...</span
+            >
+          }
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          @for (stockControl of stockControls; track $index; let i = $index) {
+            <div class="rounded-xl border border-slate-200 bg-white/70 p-3">
+              <p class="mb-2 text-sm font-bold uppercase tracking-wide text-slate-500">
+                {{ getSucursalNameByStockControl(stockControl) }}
+              </p>
+
+              <input type="hidden" [formControl]="stockControl.controls.id_sucursal" />
+              <input
+                type="number"
+                min="0"
+                class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-xl font-semibold text-blue-600 focus:ring-2 focus:ring-blue-500"
+                [formControl]="stockControl.controls.cantidad"
+              />
+            </div>
+          }
+        </div>
+      </section>
+
+      <footer class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
+        <button
+          type="button"
+          class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+          (click)="close()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
+          [disabled]="form.invalid || isSaving() || isLoadingCategorias() || isLoadingStock()"
+        >
+          @if (isSaving()) {
+            Guardando...
+          } @else {
+            Guardar Herramienta
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

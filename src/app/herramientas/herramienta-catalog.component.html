@@ -1,0 +1,201 @@
+<section class="min-h-screen bg-slate-100 p-6">
+  <header class="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-900">Catalogo de Herramientas</h1>
+      <p class="mt-1 text-sm text-slate-500">
+        Vista de stock total, sucursal y obra en formato card
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="rounded-xl bg-slate-900 px-4 py-2.5 font-semibold text-white transition hover:bg-slate-700"
+      (click)="openModal()"
+    >
+      + Nueva Herramienta
+    </button>
+  </header>
+
+  <div class="relative mb-6">
+    <svg
+      class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+      ></path>
+    </svg>
+
+    <input
+      type="text"
+      class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pl-11 text-gray-700 shadow-sm focus:border-slate-400 focus:ring-0"
+      placeholder="Buscar por herramienta o categoria"
+      [value]="searchTerm()"
+      (input)="onSearchInput($event)"
+    />
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+    @for (herramienta of filteredHerramientas(); track trackByHerramienta($index, herramienta)) {
+      <article
+        class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="isCardExpanded(herramienta, $index)"
+        [class.border-slate-300]="isCardExpanded(herramienta, $index)"
+        [class.bg-slate-50]="isHerramientaInactive(herramienta)"
+        [class.opacity-85]="isHerramientaInactive(herramienta)"
+        (click)="toggleCardExpansion(herramienta, $index)"
+        (keydown)="onCardKeydown($event, herramienta, $index)"
+      >
+        <div class="border-b border-slate-100 pb-4">
+          <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+            {{ getCategoria(herramienta) }}
+          </p>
+          <h2 class="mt-2 text-3xl font-black leading-tight text-slate-900">
+            {{ herramienta.nombre }}
+          </h2>
+
+          <div class="mt-5 flex items-end justify-between">
+            <span class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400"
+              >Stock total</span
+            >
+            <p class="text-4xl font-black leading-none text-slate-900">
+              {{ getCantidadTotal(herramienta) }}
+              <span class="text-lg font-semibold text-slate-400">{{
+                getCantidadTotal(herramienta) === 1 ? 'ud' : 'uds'
+              }}</span>
+            </p>
+          </div>
+
+          @if (isHerramientaInactive(herramienta)) {
+            <span
+              class="mt-3 inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-rose-700"
+            >
+              Desactivado
+            </span>
+          }
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="rounded-2xl border border-slate-200 bg-white p-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">
+              En sucursal
+            </p>
+            <p class="mt-2 text-3xl font-black text-slate-900">
+              {{ getCantidadDisponible(herramienta) }}
+            </p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200 bg-slate-100 p-3">
+            <p class="text-xs font-semibold uppercase tracking-[0.15em] text-blue-800">En obra</p>
+            <p class="mt-2 text-3xl font-black text-blue-900">
+              {{ getCantidadEnObra(herramienta) }}
+            </p>
+          </div>
+        </div>
+
+        @if (isCardExpanded(herramienta, $index)) {
+          <div class="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
+              Distribucion en obra
+            </p>
+            <p class="mt-2 text-sm font-medium text-slate-600">
+              Plantilla temporal: al hacer click en la card, aqui se mostrara la distribucion por
+              obra cuando el endpoint este disponible.
+            </p>
+            <p class="mt-3 text-xs text-slate-500">
+              Proximamente: lista de obras y cantidad asignada por cada una.
+            </p>
+          </div>
+        }
+
+        <div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+          <span class="text-xs font-semibold uppercase tracking-[0.15em] text-slate-400">
+            {{ isCardExpanded(herramienta, $index) ? 'Ocultar distribucion' : 'Ver distribucion' }}
+          </span>
+
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100"
+              title="Editar herramienta"
+              aria-label="Editar herramienta"
+              (click)="openModal(herramienta); $event.stopPropagation()"
+            >
+              <svg
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+                ></path>
+              </svg>
+            </button>
+
+            @if (herramienta.id_herramienta; as idHerramienta) {
+              <button
+                type="button"
+                class="inline-flex h-9 min-w-[116px] items-center justify-center rounded-xl px-3 text-xs font-semibold transition"
+                [class.text-red-600]="isHerramientaActive(herramienta)"
+                [class.hover:bg-red-50]="isHerramientaActive(herramienta)"
+                [class.text-emerald-700]="isHerramientaInactive(herramienta)"
+                [class.hover:bg-emerald-50]="isHerramientaInactive(herramienta)"
+                [class.opacity-70]="isEstadoProcessing(idHerramienta)"
+                [disabled]="isEstadoProcessing(idHerramienta)"
+                [title]="
+                  isHerramientaActive(herramienta)
+                    ? 'Desactivar herramienta'
+                    : 'Activar herramienta'
+                "
+                [attr.aria-label]="
+                  isHerramientaActive(herramienta)
+                    ? 'Desactivar herramienta'
+                    : 'Activar herramienta'
+                "
+                (click)="toggleEstado(herramienta); $event.stopPropagation()"
+              >
+                @if (isEstadoProcessing(idHerramienta)) {
+                  {{ getEstadoActionText(idHerramienta) }}
+                } @else {
+                  @if (isHerramientaActive(herramienta)) {
+                    Desactivar
+                  } @else {
+                    Activar
+                  }
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+
+  @if (filteredHerramientas().length === 0) {
+    <div
+      class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500"
+    >
+      No se encontraron herramientas para la busqueda actual.
+    </div>
+  }
+
+  @if (isModalOpen()) {
+    <app-herramienta-modal
+      [herramientaToEdit]="selectedHerramienta()"
+      [sucursales]="sucursales()"
+      (close)="closeModal()"
+      (saved)="closeModal()"
+    ></app-herramienta-modal>
+  }
+</section>

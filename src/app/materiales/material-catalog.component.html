@@ -1,0 +1,266 @@
+<section class="min-h-screen bg-gray-50 p-6">
+  <header class="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-900">Catalogo de Materiales</h1>
+      <p class="mt-1 text-sm text-slate-500">Gestion centralizada de stock y precios</p>
+    </div>
+
+    <button
+      type="button"
+      class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+      (click)="openModal()"
+    >
+      + Nuevo Material
+    </button>
+  </header>
+
+  <div class="relative mb-6">
+    <svg
+      class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+      ></path>
+    </svg>
+
+    <input
+      type="text"
+      class="w-full rounded-xl border-0 bg-white px-4 py-3 pl-11 text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500"
+      placeholder="Buscar por Codigo o Nombre"
+      [value]="searchTerm()"
+      (input)="onSearchInput($event)"
+    />
+  </div>
+
+  @for (material of filteredMateriales(); track trackByMaterial($index, material)) {
+    <article
+      class="relative mb-4 rounded-2xl border p-4 shadow-sm transition-all"
+      [class.border-gray-100]="isMaterialActive(material)"
+      [class.border-gray-300]="isMaterialInactive(material)"
+      [class.bg-white]="isMaterialActive(material)"
+      [class.bg-gray-100]="isMaterialInactive(material)"
+      [class.opacity-85]="isMaterialInactive(material)"
+    >
+      @if (isMaterialInactive(material)) {
+        <span
+          class="absolute right-4 top-3 inline-flex rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-rose-700"
+        >
+          Desactivado
+        </span>
+      }
+
+      <div class="grid grid-cols-1 items-center gap-4 lg:grid-cols-[2.4fr_1.2fr_1.5fr_auto]">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-blue-600"
+          >
+            <svg
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4.5 7.5 12 3l7.5 4.5-7.5 4.5-7.5-4.5ZM4.5 12 12 16.5 19.5 12M4.5 16.5 12 21l7.5-4.5"
+              ></path>
+            </svg>
+          </div>
+
+          <div class="min-w-0">
+            <p
+              class="truncate text-sm font-bold"
+              [class.text-slate-500]="isMaterialInactive(material)"
+              [class.text-blue-600]="!isMaterialInactive(material)"
+            >
+              {{ material.codigo }}
+            </p>
+            <div class="flex items-center gap-2">
+              <p
+                class="truncate text-xl font-semibold"
+                [class.text-slate-600]="isMaterialInactive(material)"
+                [class.text-slate-900]="!isMaterialInactive(material)"
+              >
+                {{ material.nombre }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="inline-flex rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
+            {{ getCategoria(material) }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <p class="text-[11px] uppercase tracking-wide text-slate-400">Venta</p>
+            <p class="text-lg font-bold text-slate-900">{{ formatMoney(material.precio) }}</p>
+          </div>
+          <div>
+            <p class="text-[11px] uppercase tracking-wide text-slate-400">Costo</p>
+            <p class="text-base font-medium text-slate-500">{{ formatMoney(material.costo) }}</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+            (click)="openModal(material)"
+          >
+            <svg
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+              ></path>
+            </svg>
+          </button>
+
+          @if (material.id_material; as materialId) {
+            <button
+              type="button"
+              class="inline-flex h-10 items-center justify-center rounded-lg px-3 text-sm font-semibold"
+              [class.min-w-[116px]]="isEstadoProcessing(materialId)"
+              [class.text-red-600]="isMaterialActive(material)"
+              [class.hover:bg-red-50]="isMaterialActive(material)"
+              [class.text-emerald-700]="isMaterialInactive(material)"
+              [class.hover:bg-emerald-50]="isMaterialInactive(material)"
+              [class.opacity-70]="isEstadoProcessing(materialId)"
+              [disabled]="isEstadoProcessing(materialId)"
+              [title]="isMaterialActive(material) ? 'Desactivar material' : 'Activar material'"
+              [attr.aria-label]="
+                isMaterialActive(material) ? 'Desactivar material' : 'Activar material'
+              "
+              (click)="toggleEstado(material)"
+            >
+              @if (isEstadoProcessing(materialId)) {
+                {{ getEstadoActionText(materialId) }}
+              } @else {
+                @if (isMaterialActive(material)) {
+                  <svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"
+                    ></path>
+                  </svg>
+                } @else {
+                  <svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9 12.75 11.25 15 15 9.75M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"
+                    ></path>
+                  </svg>
+                }
+              }
+            </button>
+          }
+
+          @if (material.id_material; as materialId) {
+            <button
+              type="button"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+              (click)="toggleAccordion(materialId)"
+            >
+              <svg
+                class="h-5 w-5 transition-transform"
+                [class.rotate-180]="isExpanded(materialId)"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"></path>
+              </svg>
+            </button>
+          }
+        </div>
+      </div>
+
+      @if (material.id_material; as materialId) {
+        @if (isExpanded(materialId)) {
+          <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+            @if (isStockLoading(materialId)) {
+              <p class="text-sm text-slate-500">Cargando stock por sucursal...</p>
+            } @else {
+              @if (getStockDetail(materialId); as stockDetail) {
+                <div class="mb-3 flex items-center justify-between">
+                  <p class="text-sm font-semibold text-slate-700">Stock por sucursal</p>
+                  <p
+                    class="text-sm font-semibold"
+                    [class.text-red-600]="isLowStockById(materialId)"
+                    [class.text-slate-700]="!isLowStockById(materialId)"
+                  >
+                    Total: {{ stockDetail.total_stock }}
+                  </p>
+                </div>
+
+                @if (stockDetail.sucursales.length > 0) {
+                  <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
+                    @for (sucursal of stockDetail.sucursales; track sucursal.id_sucursal) {
+                      <div
+                        class="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2"
+                      >
+                        <span class="text-sm text-slate-600">{{ sucursal.nombre_sucursal }}</span>
+                        <span class="text-lg font-bold text-blue-600">{{ sucursal.cantidad }}</span>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="text-sm text-slate-500">Sin stock registrado por sucursales.</p>
+                }
+              } @else {
+                <p class="text-sm text-slate-500">No se pudo cargar el detalle de stock.</p>
+              }
+            }
+          </div>
+        }
+      }
+    </article>
+  }
+
+  @if (filteredMateriales().length === 0) {
+    <div
+      class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500"
+    >
+      No se encontraron materiales para la busqueda actual.
+    </div>
+  }
+
+  @if (isModalOpen()) {
+    <app-material-modal
+      [materialToEdit]="selectedMaterial()"
+      (close)="closeModal()"
+    ></app-material-modal>
+  }
+</section>

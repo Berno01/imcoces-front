@@ -1,0 +1,158 @@
+<div class="relative w-full">
+  <button
+    type="button"
+    class="relative w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-left focus:ring-2 focus:ring-blue-500"
+    (click)="toggleDropdown($event)"
+  >
+    <div class="flex items-center justify-between gap-3">
+      <span class="truncate text-sm" [class.text-gray-500]="selectedLabel === placeholder">
+        {{ selectedLabel }}
+      </span>
+      <svg class="h-4 w-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"></path>
+      </svg>
+    </div>
+  </button>
+
+  @if (isOpen()) {
+    <div class="absolute z-50 mt-1 w-full overflow-y-auto rounded-lg border bg-white shadow-lg max-h-60">
+      <ul class="divide-y divide-gray-100">
+        @for (item of items; track trackByItem($index, item)) {
+          <li class="px-2 py-1">
+            @if (isEditingItem(item)) {
+              <div class="flex items-center gap-2 rounded-md bg-gray-50 p-2">
+                @if (showColorSwatch) {
+                  <input
+                    type="color"
+                    class="h-9 w-10 cursor-pointer rounded border border-gray-300 bg-transparent p-1"
+                    [value]="draftColor()"
+                    (input)="onDraftColorInput($event)"
+                    (click)="$event.stopPropagation()"
+                  />
+                }
+
+                <input
+                  type="text"
+                  class="h-9 flex-1 rounded-md border border-gray-300 px-2 text-sm focus:ring-2 focus:ring-blue-500"
+                  [value]="draftName()"
+                  (input)="onDraftNameInput($event)"
+                  (click)="$event.stopPropagation()"
+                />
+
+                <button
+                  type="button"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                  (click)="saveInline($event)"
+                >
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7"></path>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 text-gray-500 hover:bg-gray-100"
+                  (click)="cancelInline($event)"
+                >
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            } @else {
+              <button
+                type="button"
+                class="flex w-full items-center justify-between gap-2 rounded-md px-2 py-2 text-left hover:bg-gray-50"
+                [class.bg-blue-50]="isSelected(item)"
+                (click)="selectItem(item, $event)"
+              >
+                <div class="flex min-w-0 items-center gap-2">
+                  @if (showColorSwatch) {
+                    <span
+                      class="h-4 w-4 rounded border border-gray-300"
+                      [style.backgroundColor]="getItemColor(item)"
+                    ></span>
+                  }
+                  <span class="truncate text-sm text-gray-700">{{ getItemLabel(item) }}</span>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-500 hover:bg-gray-200"
+                    (click)="startEdit(item, $event)"
+                  >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+                      ></path>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex h-7 w-7 items-center justify-center rounded-md text-red-500 hover:bg-red-50"
+                    (click)="requestDelete(item, $event)"
+                  >
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path>
+                    </svg>
+                  </button>
+                </div>
+              </button>
+            }
+          </li>
+        }
+
+        <li class="border-t border-gray-100 px-2 py-1">
+          @if (isCreating()) {
+            <div class="flex items-center gap-2 rounded-md bg-blue-50 p-2">
+              @if (showColorSwatch) {
+                <input
+                  type="color"
+                  class="h-9 w-10 cursor-pointer rounded border border-gray-300 bg-transparent p-1"
+                  [value]="draftColor()"
+                  (input)="onDraftColorInput($event)"
+                  (click)="$event.stopPropagation()"
+                />
+              }
+              <input
+                type="text"
+                class="h-9 flex-1 rounded-md border border-gray-300 px-2 text-sm focus:ring-2 focus:ring-blue-500"
+                [value]="draftName()"
+                (input)="onDraftNameInput($event)"
+                (click)="$event.stopPropagation()"
+              />
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                (click)="saveInline($event)"
+              >
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m5 13 4 4L19 7"></path>
+                </svg>
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-300 text-gray-500 hover:bg-gray-100"
+                (click)="cancelInline($event)"
+              >
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 6 6 18M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          } @else {
+            <button
+              type="button"
+              class="w-full rounded-md px-2 py-2 text-left text-sm font-bold text-blue-600 hover:bg-blue-50"
+              (click)="startCreate($event)"
+            >
+              + Crear nuevo registro
+            </button>
+          }
+        </li>
+      </ul>
+    </div>
+  }
+</div>
