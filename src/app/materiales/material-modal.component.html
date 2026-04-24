@@ -2,7 +2,9 @@
   <section class="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-xl">
     <header class="mb-5 flex items-center justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Techito Registro</p>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
+          Techito Registro
+        </p>
         <h2 class="text-3xl font-bold text-slate-900">Gestion de Material</h2>
       </div>
 
@@ -26,7 +28,9 @@
     <form class="space-y-5" [formGroup]="form" (ngSubmit)="submit()">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Codigo unico</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >Codigo unico</label
+          >
           <input
             type="text"
             class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
@@ -36,7 +40,9 @@
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Nombre del material</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >Nombre del material</label
+          >
           <input
             type="text"
             class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
@@ -46,7 +52,9 @@
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Categoria</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >Categoria</label
+          >
           <app-smart-select
             [items]="categoriaItems()"
             displayKey="label"
@@ -61,7 +69,9 @@
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Color del material</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >Color del material</label
+          >
           <app-smart-select
             [items]="colorItems()"
             displayKey="label"
@@ -77,7 +87,9 @@
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Costo base (Bs)</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >Costo base (Bs)</label
+          >
           <input
             type="number"
             min="0"
@@ -88,7 +100,9 @@
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Precio de venta (Bs)</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >Precio de venta (Bs)</label
+          >
           <input
             type="number"
             min="0"
@@ -99,18 +113,22 @@
         </div>
 
         <div>
-          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Medida</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+            >Medida</label
+          >
           <input
-            type="number"
-            min="1"
-            step="1"
+            type="text"
+            maxlength="100"
             class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            placeholder="Ej: 25x26x05"
             formControlName="medida"
           />
         </div>
 
         <div class="flex items-end">
-          <label class="mb-2 inline-flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-slate-700">
+          <label
+            class="mb-2 inline-flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-slate-700"
+          >
             <input
               type="checkbox"
               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -130,14 +148,20 @@
 
           <label class="relative inline-flex cursor-pointer items-center">
             <input type="checkbox" class="peer sr-only" formControlName="has_vencimiento" />
-            <span class="h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-amber-500"></span>
-            <span class="absolute left-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"></span>
+            <span
+              class="h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-amber-500"
+            ></span>
+            <span
+              class="absolute left-1 h-4 w-4 rounded-full bg-white transition peer-checked:translate-x-5"
+            ></span>
           </label>
         </div>
 
         @if (form.controls.has_vencimiento.value) {
           <div class="mt-4">
-            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Fecha de vencimiento</label>
+            <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+              >Fecha de vencimiento</label
+            >
             <input
               type="date"
               class="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm focus:ring-2 focus:ring-blue-500"

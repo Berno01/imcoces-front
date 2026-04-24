@@ -1,0 +1,253 @@
+<section class="min-h-screen bg-slate-100 p-6">
+  <header class="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-slate-900">Resumen de personal</h1>
+      <p class="mt-1 text-sm text-slate-500">Gestion de usuarios activos del sistema</p>
+    </div>
+
+    <button
+      type="button"
+      class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+      (click)="openCreateModal()"
+    >
+      + Nuevo Usuario
+    </button>
+  </header>
+
+  @if (errorMessage()) {
+    <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <div class="relative mb-5">
+    <svg
+      class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+      ></path>
+    </svg>
+
+    <input
+      type="text"
+      class="w-full rounded-xl border-0 bg-white px-4 py-3 pl-11 text-gray-700 shadow-sm focus:ring-2 focus:ring-blue-500"
+      placeholder="Buscar por nombre, ID de usuario o rol"
+      [value]="searchTerm()"
+      (input)="onSearchInput($event)"
+    />
+  </div>
+
+  <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+      <h2 class="text-2xl font-bold text-slate-900">Listado de Personal</h2>
+      <span
+        class="rounded-lg bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600"
+      >
+        {{ totalFiltrados() }} registros
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full table-fixed">
+        <thead class="border-b border-slate-200 bg-slate-50/80">
+          <tr class="text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            <th class="px-6 py-4">Nombre Completo</th>
+            <th class="px-4 py-4">Rol</th>
+            <th class="px-4 py-4 text-center">Obras Activas</th>
+            <th class="px-4 py-4 text-right">Total Descuentos (Bs)</th>
+            <th class="px-4 py-4 text-right">Saldo Pendiente (Bs)</th>
+            <th class="w-16 px-2 py-4"></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isLoading()) {
+            <tr>
+              <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">
+                Cargando personal...
+              </td>
+            </tr>
+          } @else {
+            @for (usuario of filteredUsuarios(); track trackByUsuario($index, usuario)) {
+              <tr class="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60">
+                <td class="px-6 py-5">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold uppercase text-slate-500"
+                    >
+                      {{ usuario.nombre.slice(0, 2) }}
+                    </div>
+
+                    <div class="min-w-0">
+                      <p class="truncate text-xl font-semibold text-slate-900">
+                        {{ usuario.nombre }}
+                      </p>
+                      <p class="text-sm text-slate-500">ID: #{{ usuario.id_usuario }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <td class="px-4 py-5">
+                  <span
+                    class="inline-flex rounded-2xl bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700"
+                  >
+                    {{ usuario.nombre_rol }}
+                  </span>
+                </td>
+
+                <td class="px-4 py-5 text-center text-3xl font-semibold text-slate-600">
+                  {{ getObrasActivasPlaceholder() }}
+                </td>
+
+                <td class="px-4 py-5 text-right text-3xl font-medium text-slate-500">
+                  {{ getDisplayValue(usuario.total_descuento) }}
+                </td>
+
+                <td class="px-4 py-5 text-right text-3xl font-semibold text-slate-900">
+                  {{ getDisplayValue(usuario.saldo_pendiente) }}
+                </td>
+
+                <td class="relative px-2 py-5 text-right">
+                  <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    [disabled]="
+                      isDeleting(usuario.id_usuario) || isDetalleLoading(usuario.id_usuario)
+                    "
+                    [class.opacity-60]="
+                      isDeleting(usuario.id_usuario) || isDetalleLoading(usuario.id_usuario)
+                    "
+                    (click)="toggleActionMenu(usuario.id_usuario)"
+                  >
+                    <svg
+                      class="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="5" r="1.7"></circle>
+                      <circle cx="12" cy="12" r="1.7"></circle>
+                      <circle cx="12" cy="19" r="1.7"></circle>
+                    </svg>
+                  </button>
+
+                  @if (isActionMenuOpen(usuario.id_usuario)) {
+                    <div
+                      class="absolute bottom-12 right-3 z-40 w-44 rounded-xl border border-slate-200 bg-white py-1 shadow-lg"
+                    >
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                        [disabled]="isDetalleLoading(usuario.id_usuario)"
+                        (click)="openEditModal(usuario)"
+                      >
+                        <svg
+                          class="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 20h9M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"
+                          ></path>
+                        </svg>
+                        @if (isDetalleLoading(usuario.id_usuario)) {
+                          Cargando...
+                        } @else {
+                          Editar usuario
+                        }
+                      </button>
+
+                      <button
+                        type="button"
+                        class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+                        [disabled]="isDeleting(usuario.id_usuario)"
+                        (click)="deleteUsuario(usuario)"
+                      >
+                        <svg
+                          class="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"
+                          ></path>
+                        </svg>
+                        @if (isDeleting(usuario.id_usuario)) {
+                          Eliminando...
+                        } @else {
+                          Eliminar usuario
+                        }
+                      </button>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+
+            @if (filteredUsuarios().length === 0) {
+              <tr>
+                <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">
+                  No se encontraron usuarios para la busqueda actual.
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="flex items-center justify-between border-t border-slate-200 px-6 py-4">
+      <p class="text-sm text-slate-500">
+        Mostrando {{ totalFiltrados() }} de {{ totalRegistros() }} empleados activos
+      </p>
+
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-500"
+          disabled
+        >
+          Anterior
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
+          disabled
+        >
+          1
+        </button>
+        <button
+          type="button"
+          class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-500"
+          disabled
+        >
+          Siguiente
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  @if (isModalOpen()) {
+    <app-usuario-modal
+      [usuarioToEdit]="selectedUsuario()"
+      (close)="closeModal()"
+      (saved)="handleSaved()"
+    ></app-usuario-modal>
+  }
+</section>

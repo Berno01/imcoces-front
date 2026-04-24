@@ -1,0 +1,155 @@
+<section class="rounded-2xl border border-slate-200 bg-slate-100/70 p-4 sm:p-5">
+  <div class="relative mb-4">
+    <svg
+      class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+      ></path>
+    </svg>
+
+    <input
+      type="text"
+      class="h-10 w-full rounded-xl border border-slate-300 bg-white px-3 pl-10 text-sm text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none"
+      placeholder="Buscar por codigo, nombre, color o medida"
+      [value]="searchTerm()"
+      (input)="onSearchInput($event)"
+    />
+  </div>
+
+  <div class="mb-4 flex flex-wrap items-center gap-2">
+    <button
+      type="button"
+      class="h-10 rounded-xl px-4 text-sm font-semibold transition"
+      [class.bg-blue-600]="viewMode() === 'nuevo'"
+      [class.text-white]="viewMode() === 'nuevo'"
+      [class.shadow-sm]="viewMode() === 'nuevo'"
+      [class.bg-white]="viewMode() !== 'nuevo'"
+      [class.text-slate-700]="viewMode() !== 'nuevo'"
+      [class.hover:bg-slate-200]="viewMode() !== 'nuevo'"
+      (click)="selectViewMode('nuevo')"
+    >
+      Catalogo Nuevo
+    </button>
+
+    <button
+      type="button"
+      class="h-10 rounded-xl px-4 text-sm font-semibold transition"
+      [class.bg-amber-400]="viewMode() === 'reciclado'"
+      [class.text-slate-900]="viewMode() === 'reciclado'"
+      [class.shadow-sm]="viewMode() === 'reciclado'"
+      [class.bg-white]="viewMode() !== 'reciclado'"
+      [class.text-slate-700]="viewMode() !== 'reciclado'"
+      [class.hover:bg-slate-200]="viewMode() !== 'reciclado'"
+      (click)="selectViewMode('reciclado')"
+    >
+      Almacen de Retazos / Sobrantes
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="rounded-xl border border-slate-200 bg-white px-4 py-6 text-sm text-slate-500">
+      Cargando materiales de {{ selectedSucursalName() }}...
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      @for (material of materialesFiltrados(); track trackByMaterial($index, material)) {
+        <article
+          class="group cursor-pointer rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow"
+          role="button"
+          tabindex="0"
+          (click)="addMaterial(material)"
+          (keydown.enter)="addMaterial(material, $event)"
+          (keydown.space)="addMaterial(material, $event); $event.preventDefault()"
+        >
+          <div class="mb-2 flex items-start justify-between gap-2">
+            <p class="text-xs font-bold uppercase tracking-[0.1em] text-blue-600">
+              ID: {{ material.codigo }}
+            </p>
+
+            <span class="h-4 w-4 rounded-full border border-slate-300" [style.backgroundColor]="getColorDot(material)"></span>
+          </div>
+
+          <p class="line-clamp-2 text-2xl font-bold leading-tight text-slate-900">{{ material.nombre }}</p>
+
+          <p class="mt-1 text-sm font-medium text-slate-500">{{ getCategoriaLabel(material) }}</p>
+
+          <div class="mt-3 rounded-lg bg-slate-100 px-2 py-1.5">
+            <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Medida</p>
+            <p class="text-sm font-bold text-slate-800">{{ material.medida }}</p>
+          </div>
+
+          <div class="mt-3 flex items-end justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold text-slate-500">Stock: {{ formatStock(material.cantidad) }} u.</p>
+              <p class="text-4xl font-bold leading-none text-slate-900">
+                {{ formatPrecio(material.precio) }}
+                <span class="text-sm font-semibold text-slate-400">Bs</span>
+              </p>
+            </div>
+
+            <span
+              class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-3xl font-semibold leading-none text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white"
+            >
+              +
+            </span>
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (materialesFiltrados().length === 0) {
+      <div
+        class="mt-4 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-500"
+      >
+        No se encontraron materiales para los filtros aplicados.
+      </div>
+    }
+  }
+
+  <footer class="mt-4 border-t border-slate-200 pt-4">
+    <p class="mb-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-400">Categorias Rapidas</p>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        class="rounded-full px-3 py-1.5 text-xs font-semibold transition"
+        [class.bg-slate-900]="selectedCategoriaId() === 0"
+        [class.text-white]="selectedCategoriaId() === 0"
+        [class.bg-white]="selectedCategoriaId() !== 0"
+        [class.text-slate-600]="selectedCategoriaId() !== 0"
+        [class.hover:bg-slate-200]="selectedCategoriaId() !== 0"
+        (click)="selectCategoria(0)"
+      >
+        Todo
+      </button>
+
+      @for (categoria of categoriasRapidas(); track categoria.id) {
+        <button
+          type="button"
+          class="rounded-full px-3 py-1.5 text-xs font-semibold transition"
+          [class.bg-slate-900]="selectedCategoriaId() === categoria.id"
+          [class.text-white]="selectedCategoriaId() === categoria.id"
+          [class.bg-white]="selectedCategoriaId() !== categoria.id"
+          [class.text-slate-600]="selectedCategoriaId() !== categoria.id"
+          [class.hover:bg-slate-200]="selectedCategoriaId() !== categoria.id"
+          (click)="selectCategoria(categoria.id)"
+        >
+          {{ categoria.nombre }}
+        </button>
+      }
+    </div>
+  </footer>
+</section>

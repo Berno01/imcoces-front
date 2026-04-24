@@ -7,14 +7,14 @@ import {
   Output,
   computed,
   inject,
-  signal
+  signal,
 } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
   FormGroup,
   ReactiveFormsModule,
-  Validators
+  Validators,
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, startWith } from 'rxjs';
@@ -26,7 +26,7 @@ import { Categoria, Color, Material } from './material.interfaces';
 import {
   SmartSelectComponent,
   SmartSelectCreatePayload,
-  SmartSelectUpdatePayload
+  SmartSelectUpdatePayload,
 } from './smart-select.component';
 
 interface MaterialFormControls {
@@ -36,7 +36,7 @@ interface MaterialFormControls {
   id_color: FormControl<number | null>;
   costo: FormControl<number>;
   precio: FormControl<number>;
-  medida: FormControl<number>;
+  medida: FormControl<string | null>;
   is_reciclado: FormControl<boolean>;
   has_vencimiento: FormControl<boolean>;
   fecha_vencimiento: FormControl<string | null>;
@@ -49,7 +49,7 @@ type SmartSelectItem = Record<string, unknown>;
   selector: 'app-material-modal',
   standalone: true,
   imports: [ReactiveFormsModule, SmartSelectComponent],
-  templateUrl: './material-modal.component.html'
+  templateUrl: './material-modal.component.html',
 })
 export class MaterialModalComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
@@ -83,65 +83,67 @@ export class MaterialModalComponent implements OnInit {
   readonly categoriaItems = computed<SmartSelectItem[]>(() =>
     this.categorias().map((categoria) => ({
       ...categoria,
-      label: this.getCategoriaNombre(categoria)
-    }))
+      label: this.getCategoriaNombre(categoria),
+    })),
   );
 
   readonly colorItems = computed<SmartSelectItem[]>(() =>
     this.colores().map((color) => ({
       ...color,
       label: this.getColorNombre(color),
-      codigo: color.codigo ?? color.codigo_color ?? '#9ca3af'
-    }))
+      codigo: color.codigo ?? color.codigo_color ?? '#9ca3af',
+    })),
   );
 
   readonly form: MaterialFormGroup = this.fb.group<MaterialFormControls>({
     codigo: this.fb.control<string | null>(null, {
-      validators: [Validators.required]
+      validators: [Validators.required],
     }),
     nombre: this.fb.control<string | null>(null, {
-      validators: [Validators.required]
+      validators: [Validators.required],
     }),
     id_categoria: this.fb.control<number | null>(null, {
-      validators: [Validators.required]
+      validators: [Validators.required],
     }),
     id_color: this.fb.control<number | null>(null, {
-      validators: [Validators.required]
+      validators: [Validators.required],
     }),
     costo: this.fb.control<number>(0, {
       nonNullable: true,
-      validators: [Validators.required, Validators.min(0)]
+      validators: [Validators.required, Validators.min(0)],
     }),
     precio: this.fb.control<number>(0, {
       nonNullable: true,
-      validators: [Validators.required, Validators.min(0)]
+      validators: [Validators.required, Validators.min(0)],
     }),
-    medida: this.fb.control<number>(1, {
-      nonNullable: true,
-      validators: [Validators.required]
+    medida: this.fb.control<string | null>(null, {
+      validators: [Validators.required, Validators.maxLength(100)],
     }),
     is_reciclado: this.fb.control<boolean>(false, {
-      nonNullable: true
+      nonNullable: true,
     }),
     has_vencimiento: this.fb.control<boolean>(false, {
-      nonNullable: true
+      nonNullable: true,
     }),
     fecha_vencimiento: this.fb.control<string | null>(
       {
         value: null,
-        disabled: true
+        disabled: true,
       },
       {
-        validators: []
-      }
-    )
+        validators: [],
+      },
+    ),
   });
 
   ngOnInit(): void {
     this.loadCatalogos();
 
     this.form.controls.has_vencimiento.valueChanges
-      .pipe(startWith(this.form.controls.has_vencimiento.value), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        startWith(this.form.controls.has_vencimiento.value),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe((hasVencimiento) => {
         this.toggleFechaVencimiento(hasVencimiento);
       });
@@ -180,7 +182,7 @@ export class MaterialModalComponent implements OnInit {
           error: () => {
             this.isSaving.set(false);
             this.errorMessage.set('No se pudo actualizar el material.');
-          }
+          },
         });
       return;
     }
@@ -197,7 +199,7 @@ export class MaterialModalComponent implements OnInit {
         error: () => {
           this.isSaving.set(false);
           this.errorMessage.set('No se pudo crear el material.');
-        }
+        },
       });
   }
 
@@ -225,7 +227,7 @@ export class MaterialModalComponent implements OnInit {
         },
         error: () => {
           this.errorMessage.set('No se pudo crear la categoria.');
-        }
+        },
       });
   }
 
@@ -233,14 +235,14 @@ export class MaterialModalComponent implements OnInit {
     this.categoriaService
       .updateCategoria({
         id_categoria: payload.id,
-        nombre: payload.nombre
+        nombre: payload.nombre,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.loadCategorias(),
         error: () => {
           this.errorMessage.set('No se pudo actualizar la categoria.');
-        }
+        },
       });
   }
 
@@ -257,7 +259,7 @@ export class MaterialModalComponent implements OnInit {
         },
         error: () => {
           this.errorMessage.set('No se pudo eliminar la categoria.');
-        }
+        },
       });
   }
 
@@ -265,7 +267,7 @@ export class MaterialModalComponent implements OnInit {
     this.colorService
       .createColor({
         nombre: payload.nombre,
-        codigo: payload.codigo ?? '#2563eb'
+        codigo: payload.codigo ?? '#2563eb',
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -278,7 +280,7 @@ export class MaterialModalComponent implements OnInit {
         },
         error: () => {
           this.errorMessage.set('No se pudo crear el color.');
-        }
+        },
       });
   }
 
@@ -287,14 +289,14 @@ export class MaterialModalComponent implements OnInit {
       .updateColor({
         id_color: payload.id,
         nombre: payload.nombre,
-        codigo: payload.codigo ?? '#2563eb'
+        codigo: payload.codigo ?? '#2563eb',
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.loadColores(),
         error: () => {
           this.errorMessage.set('No se pudo actualizar el color.');
-        }
+        },
       });
   }
 
@@ -311,7 +313,7 @@ export class MaterialModalComponent implements OnInit {
         },
         error: () => {
           this.errorMessage.set('No se pudo eliminar el color.');
-        }
+        },
       });
   }
 
@@ -321,7 +323,7 @@ export class MaterialModalComponent implements OnInit {
 
     forkJoin({
       categorias: this.categoriaService.getCategorias(),
-      colores: this.colorService.getColores()
+      colores: this.colorService.getColores(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -333,7 +335,7 @@ export class MaterialModalComponent implements OnInit {
         error: () => {
           this.isLoadingCatalogs.set(false);
           this.errorMessage.set('No se pudieron cargar categorias y colores.');
-        }
+        },
       });
   }
 
@@ -347,7 +349,7 @@ export class MaterialModalComponent implements OnInit {
         },
         error: () => {
           this.errorMessage.set('No se pudieron cargar las categorias.');
-        }
+        },
       });
   }
 
@@ -361,7 +363,7 @@ export class MaterialModalComponent implements OnInit {
         },
         error: () => {
           this.errorMessage.set('No se pudieron cargar los colores.');
-        }
+        },
       });
   }
 
@@ -390,16 +392,17 @@ export class MaterialModalComponent implements OnInit {
         id_color: null,
         costo: 0,
         precio: 0,
-        medida: 1,
+        medida: null,
         is_reciclado: false,
         has_vencimiento: false,
-        fecha_vencimiento: null
+        fecha_vencimiento: null,
       });
       this.toggleFechaVencimiento(false);
       return;
     }
 
-    const hasVencimiento = typeof material.fecha_vencimiento === 'string' && material.fecha_vencimiento.length > 0;
+    const hasVencimiento =
+      typeof material.fecha_vencimiento === 'string' && material.fecha_vencimiento.length > 0;
 
     this.form.patchValue({
       codigo: material.codigo,
@@ -411,9 +414,7 @@ export class MaterialModalComponent implements OnInit {
       medida: this.normalizeMedida(material.medida),
       is_reciclado: this.normalizeReciclado(material.is_reciclado),
       has_vencimiento: hasVencimiento,
-      fecha_vencimiento: hasVencimiento
-        ? this.toDateInputValue(material.fecha_vencimiento)
-        : null
+      fecha_vencimiento: hasVencimiento ? this.toDateInputValue(material.fecha_vencimiento) : null,
     });
 
     this.toggleFechaVencimiento(hasVencimiento);
@@ -429,8 +430,8 @@ export class MaterialModalComponent implements OnInit {
       id_color: rawValue.id_color ?? 0,
       costo: rawValue.costo,
       precio: rawValue.precio,
-      medida: rawValue.medida,
-      is_reciclado: rawValue.is_reciclado
+      medida: this.normalizeMedida(rawValue.medida),
+      is_reciclado: rawValue.is_reciclado,
     };
 
     if (rawValue.has_vencimiento && rawValue.fecha_vencimiento) {
@@ -444,13 +445,16 @@ export class MaterialModalComponent implements OnInit {
     return value === true || value === 1;
   }
 
-  private normalizeMedida(value: Material['medida']): number {
-    if (typeof value === 'number') {
-      return value;
+  private normalizeMedida(value: Material['medida'] | null | undefined): string {
+    if (typeof value === 'string') {
+      return value.trim();
     }
 
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : 1;
+    if (typeof value === 'number') {
+      return String(value);
+    }
+
+    return '';
   }
 
   private toDateInputValue(value: string): string {

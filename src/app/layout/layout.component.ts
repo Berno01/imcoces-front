@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthSessionService } from '../auth/auth-session.service';
 import { SucursalService } from '../shared/sucursal/sucursal.service';
 
 type SidebarIcon = 'dashboard' | 'inventory' | 'pos' | 'works' | 'people' | 'logout';
@@ -28,17 +29,81 @@ interface SidebarSection extends SidebarItem {
 })
 export class LayoutComponent {
   private readonly router = inject(Router);
+  private readonly authSessionService = inject(AuthSessionService);
   private readonly sucursalService = inject(SucursalService);
 
   isSidebarExpanded = false;
   openSectionId: string | null = null;
 
-  readonly userName = 'Alejandro Morales';
-  readonly userRole = 'Administrador de Obra';
-
   readonly sucursalOptions = computed(() => this.sucursalService.sucursales());
   readonly selectedSucursalId = computed(() => this.sucursalService.selectedSucursalId() ?? 0);
   readonly isBranchLoading = computed(() => this.sucursalService.loading());
+
+  get userName(): string {
+    const usuario = this.authSessionService.usuario();
+    if (!usuario) {
+      return 'Usuario';
+    }
+
+    const nombres =
+      this.toText(usuario['nombres']) ??
+      this.toText(usuario['nombre']) ??
+      this.toText(usuario['login']);
+    const apellidos = this.toText(usuario['apellidos']) ?? this.toText(usuario['apellido']);
+
+    if (nombres && apellidos) {
+      return `${nombres} ${apellidos}`;
+    }
+
+    if (nombres) {
+      return nombres;
+    }
+
+    return 'Usuario';
+  }
+
+  get userRole(): string {
+    const roleId = this.authSessionService.idRol();
+
+    if (roleId === 1) {
+      return 'Administrador';
+    }
+
+    if (roleId === 2) {
+      return 'Supervisor';
+    }
+
+    if (roleId) {
+      return `Rol ${roleId}`;
+    }
+
+    return 'Sin rol';
+  }
+
+  get userInitials(): string {
+    const parts = this.userName
+      .split(' ')
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0);
+
+    if (parts.length === 0) {
+      return 'US';
+    }
+
+    if (parts.length === 1) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  get isLogoutLoading(): boolean {
+    return this.authSessionService.isLogoutLoading();
+  }
+
+  get isRefreshLoading(): boolean {
+    return this.authSessionService.isRefreshLoading();
+  }
 
   readonly iconPaths: Record<SidebarIcon, string> = {
     dashboard:
@@ -113,7 +178,13 @@ export class LayoutComponent {
   }
 
   logout(): void {
-    console.info('Accion de cierre de sesion pendiente de integrar.');
+    if (this.authSessionService.isLogoutLoading()) {
+      return;
+    }
+
+    this.authSessionService.logout().subscribe(() => {
+      void this.router.navigateByUrl('/login');
+    });
   }
 
   onSucursalChange(event: Event): void {
@@ -133,5 +204,14 @@ export class LayoutComponent {
   private syncOpenSectionToCurrentRoute(): void {
     const activeSection = this.accordionSections.find((section) => this.isSectionActive(section));
     this.openSectionId = activeSection?.id ?? null;
+  }
+
+  private toText(value: unknown): string | null {
+    if (typeof value !== 'string') {
+      return null;
+    }
+
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : null;
   }
 }

@@ -1,0 +1,60 @@
+<section
+  class="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-100 px-4 py-8"
+>
+  <div
+    class="pointer-events-none absolute -left-28 -top-28 h-72 w-72 rounded-full bg-blue-200/45 blur-3xl"
+  ></div>
+  <div
+    class="pointer-events-none absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-cyan-200/45 blur-3xl"
+  ></div>
+
+  <article
+    class="relative z-10 w-full max-w-md rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-xl shadow-slate-300/35 backdrop-blur sm:p-8"
+  >
+    <header>
+      <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600">IMCOCES ERP</p>
+      <h1 class="mt-2 text-2xl font-bold text-slate-900">Iniciar Sesion</h1>
+      <p class="mt-1 text-sm text-slate-500">Ingrese sus credenciales para continuar.</p>
+    </header>
+
+    @if (errorMessage()) {
+      <div
+        class="mt-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"
+      >
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="submit()">
+      <label class="block">
+        <span class="mb-1.5 block text-sm font-semibold text-slate-700">Usuario</span>
+        <input
+          type="text"
+          formControlName="login"
+          autocomplete="username"
+          class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 transition focus:border-blue-400 focus:outline-none"
+          placeholder="Ingrese su usuario"
+        />
+      </label>
+
+      <label class="block">
+        <span class="mb-1.5 block text-sm font-semibold text-slate-700">Contrasena</span>
+        <input
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 transition focus:border-blue-400 focus:outline-none"
+          placeholder="Ingrese su contrasena"
+        />
+      </label>
+
+      <button
+        type="submit"
+        class="inline-flex h-11 w-full items-center justify-center rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+        [disabled]="isSubmitting()"
+      >
+        {{ isSubmitting() ? 'Ingresando...' : 'Ingresar' }}
+      </button>
+    </form>
+  </article>
+</section>

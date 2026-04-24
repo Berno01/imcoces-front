@@ -90,7 +90,7 @@ export interface IngresoMaterialOption {
   precio: number;
   costo_unitario: number;
   is_reciclado: boolean | number;
-  medida: number | string;
+  medida: string;
   cantidad: number;
   sucursales: IngresoMaterialSucursal[];
 }

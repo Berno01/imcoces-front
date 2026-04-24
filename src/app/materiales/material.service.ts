@@ -8,11 +8,11 @@ import {
   CreateMaterialPayload,
   Material,
   MaterialStockDetail,
-  UpdateMaterialPayload
+  UpdateMaterialPayload,
 } from './material.interfaces';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class MaterialService {
   private readonly http = inject(HttpClient);
@@ -39,7 +39,7 @@ export class MaterialService {
 
   desactivarMaterial(id_material: number): Observable<ApiResponse<Material>> {
     return this.http.delete<ApiResponse<Material>>(this.baseUrl, {
-      body: { id_material }
+      body: { id_material },
     });
   }
 
@@ -57,7 +57,7 @@ export class MaterialService {
       precio,
       fecha_vencimiento,
       medida,
-      is_reciclado
+      is_reciclado,
     } = material;
 
     return {
@@ -68,8 +68,8 @@ export class MaterialService {
       costo,
       precio,
       fecha_vencimiento,
-      medida,
-      is_reciclado
+      medida: this.normalizeMedida(medida),
+      is_reciclado,
     };
   }
 
@@ -82,7 +82,15 @@ export class MaterialService {
 
     return {
       id_material: material.id_material,
-      ...basePayload
+      ...basePayload,
     };
+  }
+
+  private normalizeMedida(value: Material['medida'] | undefined): string | undefined {
+    if (value === undefined || value === null) {
+      return undefined;
+    }
+
+    return String(value).trim();
   }
 }

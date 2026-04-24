@@ -4,7 +4,7 @@ export interface ApiResponse<T> {
 }
 
 export type FechaMaterial = string;
-export type MedidaMaterial = number | string;
+export type MedidaMaterial = string;
 export type RecicladoMaterial = boolean | number;
 
 export interface Categoria {

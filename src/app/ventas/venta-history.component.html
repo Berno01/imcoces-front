@@ -1,0 +1,36 @@
+<section class="min-h-screen bg-slate-100 p-4 sm:p-5">
+  <header class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Resumen de Ventas</h1>
+      <p class="text-sm text-slate-500">Sucursal activa: {{ selectedSucursalName() }}</p>
+    </div>
+
+    <div class="flex flex-col items-stretch gap-2 sm:flex-row sm:items-start">
+      <app-venta-date-filter (filtersChange)="onDateFiltersChange($event)"></app-venta-date-filter>
+
+      <button
+        type="button"
+        (click)="onCreateVenta()"
+        class="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white transition hover:bg-slate-700"
+      >
+        Nueva venta
+      </button>
+    </div>
+  </header>
+
+  @if (errorMessage()) {
+    <div
+      class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+    >
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <app-venta-summary-table
+    [ventas]="ventas()"
+    [isLoading]="isLoading()"
+    [deletingVentaIds]="deletingVentaIds()"
+    (editRequested)="onEditVenta($event)"
+    (deleteRequested)="onDeleteVenta($event)"
+  ></app-venta-summary-table>
+</section>

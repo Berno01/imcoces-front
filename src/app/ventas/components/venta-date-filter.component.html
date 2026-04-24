@@ -1,0 +1,47 @@
+<div class="flex flex-wrap items-center gap-3">
+  @if (filterMode() === 'single') {
+    <input
+      type="date"
+      class="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm"
+      [value]="singleDate()"
+      (change)="onSingleDateChange($event)"
+    />
+  } @else {
+    <input
+      type="date"
+      class="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm"
+      [value]="rangeStartDate()"
+      (change)="onRangeStartDateChange($event)"
+    />
+
+    <input
+      type="date"
+      class="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 shadow-sm"
+      [value]="rangeEndDate()"
+      (change)="onRangeEndDateChange($event)"
+    />
+  }
+
+  <button
+    type="button"
+    class="h-11 rounded-xl border px-5 text-sm font-semibold transition"
+    [class.border-slate-900]="filterMode() === 'range'"
+    [class.bg-slate-200]="filterMode() === 'range'"
+    [class.text-slate-900]="filterMode() === 'range'"
+    [class.border-slate-300]="filterMode() !== 'range'"
+    [class.bg-white]="filterMode() !== 'range'"
+    [class.text-slate-700]="filterMode() !== 'range'"
+    [class.hover:bg-slate-100]="filterMode() !== 'range'"
+    (click)="toggleRangeMode()"
+  >
+    Rango
+  </button>
+
+  <button
+    type="button"
+    class="h-11 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+    (click)="setTodayBolivia()"
+  >
+    Hoy
+  </button>
+</div>
