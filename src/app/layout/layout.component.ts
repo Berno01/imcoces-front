@@ -138,12 +138,12 @@ export class LayoutComponent {
     },
     {
       id: 'obras',
-      label: 'Obras',
-      route: '/obras',
+      label: 'Obra',
+      route: '/obra',
       icon: 'works',
       children: [
-        { label: 'Obras', route: '/obras/obras' },
-        { label: 'Control de Deudores', route: '/obras/control-de-deudores' },
+        { label: 'Inicio', route: '/obra' },
+        { label: 'Deudores', route: '/obra/deudores' },
       ],
     },
   ];
