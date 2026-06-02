@@ -9,12 +9,20 @@ export class ProformaService {
     total: number;
   }): Promise<Blob> {
     // dynamic imports to avoid bundling issues if package not installed
-    const [{ default: XlsxPopulate }, { saveAs }] = await Promise.all([
+    const [xlsxModule, { saveAs }] = await Promise.all([
       // @ts-ignore
-      import('xlsx-populate/browser/xlsx-populate'),
+      import('xlsx-populate/browser/xlsx-populate-no-encryption'),
       // @ts-ignore
       import('file-saver'),
     ]);
+
+    const XlsxPopulate =
+      // @ts-ignore
+      (xlsxModule?.default ?? xlsxModule?.XlsxPopulate ?? (globalThis as any)?.XlsxPopulate);
+
+    if (!XlsxPopulate || typeof XlsxPopulate.fromDataAsync !== 'function') {
+      throw new Error('No se pudo cargar el motor de Excel en el navegador.');
+    }
 
     const resp = await fetch(templateUrl);
     if (!resp.ok) {
