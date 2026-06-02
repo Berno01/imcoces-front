@@ -5,6 +5,7 @@ import { SucursalService } from '../shared/sucursal/sucursal.service';
 import { VentaMaterialCatalogComponent } from './components/venta-material-catalog.component';
 import { VentaMaterialOption, VentaPersisted } from './venta.interfaces';
 import { VentaService } from './venta.service';
+import { ProformaService } from '../shared/services/proforma.service';
 
 export interface VentaDraftItem {
   id_material: number;
@@ -34,6 +35,7 @@ export interface VentaSavedEvent {
 })
 export class VentaRegisterComponent {
   private readonly ventaService = inject(VentaService);
+  private readonly proformaService = inject(ProformaService);
   private readonly sucursalService = inject(SucursalService);
 
   private editingVentaIdInternal: number | null = null;
@@ -462,6 +464,45 @@ export class VentaRegisterComponent {
     }
 
     return this.mode === 'edit' ? 'MODIFICAR VENTA' : 'REGISTRAR VENTA';
+  }
+
+  async downloadProforma(): Promise<void> {
+    if (this.selectedItems().length === 0) {
+      this.errorMessage.set('No hay items para generar la proforma.');
+      return;
+    }
+
+    const fecha = new Date().toLocaleDateString('es-BO');
+    const cliente = this.toText(this.cliente());
+
+    const lineas: Array<{ cantidad: number | null; descripcion: string | null; precio: number | null; subtotal: number | null }> = this.selectedItems().map((item) => ({
+      cantidad: item.cantidad,
+      descripcion: item.nombre,
+      precio: item.precio,
+      subtotal: this.getSubtotal(item),
+    }));
+
+    // Ensure exactly up to 18 lines (C20..C37)
+    const padded: Array<{ cantidad: number | null; descripcion: string | null; precio: number | null; subtotal: number | null }> = Array.from({ length: 18 }).map(
+      (_, idx) =>
+        lineas[idx] ?? {
+          cantidad: null,
+          descripcion: null,
+          precio: null,
+          subtotal: null,
+        },
+    );
+
+    try {
+      await this.proformaService.generateFromTemplate('/assets/plantilla.xlsx', {
+        fecha,
+        cliente,
+        lineas: padded,
+        total: this.totalPagar(),
+      });
+    } catch (err) {
+      this.errorMessage.set('Error generando proforma: ' + (err instanceof Error ? err.message : String(err)));
+    }
   }
 
   trackByItem(_index: number, item: VentaDraftItem): number {
