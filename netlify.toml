@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "dist/imcoces-fe/browser"
+  publish = "dist/imcoces-fe"
 
 [[redirects]]
   from = "/*"
