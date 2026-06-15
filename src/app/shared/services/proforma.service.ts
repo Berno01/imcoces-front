@@ -2,19 +2,29 @@ import { Injectable } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ProformaService {
-  async generateFromTemplate(templateUrl: string, data: {
-    fecha: string;
-    cliente: string;
-    lineas: Array<{ cantidad: number | null; descripcion: string | null; precio: number | null; subtotal: number | null }>;
-    total: number;
-  }): Promise<Blob> {
+  async generateFromTemplate(
+    templateUrl: string,
+    data: {
+      fecha: string;
+      cliente: string;
+      lineas: Array<{
+        cantidad: number | null;
+        descripcion: string | null;
+        precio: number | null;
+        subtotal: number | null;
+      }>;
+      total: number;
+    },
+  ): Promise<Blob> {
     try {
       // dynamic imports to avoid bundling issues
       const xlsxModule = await import('xlsx-populate/browser/xlsx-populate-no-encryption');
       const fileSaverModule = await import('file-saver');
 
       const XlsxPopulate =
-        xlsxModule?.default ?? xlsxModule?.XlsxPopulate ?? (globalThis as any)?.XlsxPopulate;
+        (xlsxModule as any).default ??
+        (xlsxModule as any).XlsxPopulate ??
+        (globalThis as any)?.XlsxPopulate;
 
       if (!XlsxPopulate || typeof XlsxPopulate.fromDataAsync !== 'function') {
         throw new Error('No se pudo cargar el motor de Excel en el navegador.');
