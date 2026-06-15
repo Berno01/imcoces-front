@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 import {
@@ -58,10 +58,39 @@ export class VentaService {
 
     const params = new HttpParams().set('id_sucursal', String(payload.id_sucursal));
 
-    return this.http.request<ApiResponse<VentaMaterialOption[]>>('GET', `${this.baseUrl}/material`, {
-      body: payload,
-      params,
-    });
+    return this.http
+      .request<ApiResponse<VentaMaterialOption[]>>('GET', `${this.baseUrl}/material`, {
+        body: payload,
+        params,
+      })
+      .pipe(
+        // Normalize is_reciclado to always be a boolean!
+        map((response) => ({
+          ...response,
+          data: response.data.map((material) => ({
+            ...material,
+            is_reciclado: this.resolveReciclado(material.is_reciclado),
+          })),
+        })),
+      );
+  }
+
+  // Helper to resolve reciclado status
+  private resolveReciclado(value: unknown): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      return normalized === '1' || normalized === 'true';
+    }
+
+    return false;
   }
 
   createVenta(payload: VentaCreatePayload): Observable<ApiResponse<VentaPersisted>> {

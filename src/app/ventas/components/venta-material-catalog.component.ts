@@ -180,6 +180,10 @@ export class VentaMaterialCatalogComponent {
     return material.id_material ?? `${material.codigo}-${index}`;
   }
 
+  isMaterialOutOfStock(material: VentaMaterialOption): boolean {
+    return this.toNumber(material.cantidad) <= 0;
+  }
+
   private loadMateriales(idSucursal: number): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
