@@ -71,11 +71,7 @@ export class VentaRegisterComponent {
         nombre_categoria: this.toText(item.nombre_categoria),
         medida: this.toText(item.medida),
         is_reciclado: isReciclado,
-        stock_disponible: this.resolveStockDisponible(
-          item.stock_disponible,
-          item.cantidad,
-          isReciclado,
-        ),
+        stock_disponible: this.resolveStockDisponible(item.stock_disponible, item.cantidad, isReciclado),
         cantidad: this.normalizeCantidad(item.cantidad, isReciclado),
         precio: this.toMoney(item.precio),
         costo: this.toMoney(item.costo),
@@ -123,10 +119,7 @@ export class VentaRegisterComponent {
   readonly hasQrPayment = computed(() => this.totalQr() > 0);
 
   readonly canSubmit = computed(
-    () =>
-      !this.isSubmitting() &&
-      this.selectedItems().length > 0 &&
-      this.toText(this.cliente()).length > 0,
+    () => !this.isSubmitting() && this.selectedItems().length > 0 && this.toText(this.cliente()).length > 0,
   );
 
   onMaterialAdded(material: VentaMaterialOption): void {
@@ -140,20 +133,8 @@ export class VentaRegisterComponent {
     const isReciclado = this.resolveReciclado(material.is_reciclado);
     const stockDisponible = this.normalizeStock(material.cantidad, isReciclado);
 
-    // Add console log to debug
-    console.log(
-      'Material clicked:',
-      material.nombre,
-      'material.is_reciclado raw:',
-      material.is_reciclado,
-      'isReciclado resolved:',
-      isReciclado,
-    );
-
     if (stockDisponible <= 0) {
-      this.errorMessage.set(
-        'Este material ya no tiene stock disponible en la sucursal seleccionada.',
-      );
+      this.errorMessage.set('Este material ya no tiene stock disponible en la sucursal seleccionada.');
       return;
     }
 
@@ -161,7 +142,7 @@ export class VentaRegisterComponent {
       const index = current.findIndex((item) => item.id_material === idMaterial);
 
       if (index === -1) {
-        const cantidadBase = 1;
+        const cantidadBase = isReciclado ? 1 : 1;
 
         return [
           ...current,
@@ -189,47 +170,33 @@ export class VentaRegisterComponent {
           return item;
         }
 
-        // Ensure item.is_reciclado is boolean for existing item
-        const itemIsReciclado = this.resolveReciclado(item.is_reciclado);
-        console.log(
-          'Existing item:',
-          item.nombre,
-          'item.is_reciclado raw:',
-          item.is_reciclado,
-          'itemIsReciclado resolved:',
-          itemIsReciclado,
-        );
-
-        const maxCantidad = this.normalizeStock(item.stock_disponible, itemIsReciclado);
+        const maxCantidad = this.normalizeStock(item.stock_disponible, item.is_reciclado);
         if (item.cantidad >= maxCantidad) {
-          this.setStockLimitMessage(item.nombre, item.stock_disponible, itemIsReciclado);
+          this.setStockLimitMessage(item.nombre, item.stock_disponible, item.is_reciclado);
           return item;
         }
 
-        // Always use the resolved boolean here
-        if (itemIsReciclado) {
-          const cantidadPropuesta = this.normalizeCantidad(item.cantidad + 1, itemIsReciclado);
+        if (this.resolveReciclado(item.is_reciclado)) {
+          const cantidadPropuesta = this.normalizeCantidad(item.cantidad + 0.5, item.is_reciclado);
 
           return {
             ...item,
-            is_reciclado: itemIsReciclado,
             cantidad: this.clampCantidadByStock(
               cantidadPropuesta,
               item.stock_disponible,
-              itemIsReciclado,
+              item.is_reciclado,
             ),
           };
         }
 
-        const cantidadPropuesta = this.normalizeCantidad(item.cantidad + 1, itemIsReciclado);
+        const cantidadPropuesta = this.normalizeCantidad(item.cantidad + 1, item.is_reciclado);
 
         return {
           ...item,
-          is_reciclado: itemIsReciclado,
           cantidad: this.clampCantidadByStock(
             cantidadPropuesta,
             item.stock_disponible,
-            itemIsReciclado,
+            item.is_reciclado,
           ),
         };
       });
@@ -272,21 +239,19 @@ export class VentaRegisterComponent {
           return target;
         }
 
-        const itemIsReciclado = this.resolveReciclado(target.is_reciclado);
-        const cantidadPropuesta = this.normalizeCantidad(target.cantidad + 1, itemIsReciclado);
+        const cantidadPropuesta = this.normalizeCantidad(target.cantidad + 1, target.is_reciclado);
         const cantidadAjustada = this.clampCantidadByStock(
           cantidadPropuesta,
           target.stock_disponible,
-          itemIsReciclado,
+          target.is_reciclado,
         );
 
         if (cantidadAjustada < cantidadPropuesta) {
-          this.setStockLimitMessage(target.nombre, target.stock_disponible, itemIsReciclado);
+          this.setStockLimitMessage(target.nombre, target.stock_disponible, target.is_reciclado);
         }
 
         return {
           ...target,
-          is_reciclado: itemIsReciclado,
           cantidad: cantidadAjustada,
         };
       }),
@@ -300,13 +265,11 @@ export class VentaRegisterComponent {
           return target;
         }
 
-        const itemIsReciclado = this.resolveReciclado(target.is_reciclado);
         const next = target.cantidad - 1;
 
         return {
           ...target,
-          is_reciclado: itemIsReciclado,
-          cantidad: this.normalizeCantidad(next, itemIsReciclado),
+          cantidad: this.normalizeCantidad(next, target.is_reciclado),
         };
       }),
     );
@@ -346,9 +309,7 @@ export class VentaRegisterComponent {
   }
 
   removeItem(idMaterial: number): void {
-    this.selectedItems.update((current) =>
-      current.filter((item) => item.id_material !== idMaterial),
-    );
+    this.selectedItems.update((current) => current.filter((item) => item.id_material !== idMaterial));
   }
 
   getSubtotal(item: VentaDraftItem): number {
@@ -426,9 +387,7 @@ export class VentaRegisterComponent {
 
     const idSucursal = this.resolveTargetSucursalId();
     if (idSucursal <= 0) {
-      this.errorMessage.set(
-        'Seleccione una sucursal especifica en el navbar para registrar la venta.',
-      );
+      this.errorMessage.set('Seleccione una sucursal especifica en el navbar para registrar la venta.');
       return;
     }
 
@@ -455,21 +414,23 @@ export class VentaRegisterComponent {
         })
       : this.ventaService.createVenta(payload);
 
-    request$.pipe(finalize(() => this.isSubmitting.set(false))).subscribe({
-      next: (response) => {
-        this.saved.emit({
-          mode: this.mode,
-          venta: response.data,
-        });
-      },
-      error: () => {
-        this.errorMessage.set(
-          isEdit
-            ? 'No se pudo modificar la venta. Verifique cantidades y stock disponible.'
-            : 'No se pudo registrar la venta. Verifique cantidades y stock disponible.',
-        );
-      },
-    });
+    request$
+      .pipe(finalize(() => this.isSubmitting.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.saved.emit({
+            mode: this.mode,
+            venta: response.data,
+          });
+        },
+        error: () => {
+          this.errorMessage.set(
+            isEdit
+              ? 'No se pudo modificar la venta. Verifique cantidades y stock disponible.'
+              : 'No se pudo registrar la venta. Verifique cantidades y stock disponible.',
+          );
+        },
+      });
   }
 
   cancelForm(): void {
@@ -514,12 +475,7 @@ export class VentaRegisterComponent {
     const fecha = new Date().toLocaleDateString('es-BO');
     const cliente = this.toText(this.cliente());
 
-    const lineas: Array<{
-      cantidad: number | null;
-      descripcion: string | null;
-      precio: number | null;
-      subtotal: number | null;
-    }> = this.selectedItems().map((item) => ({
+    const lineas: Array<{ cantidad: number | null; descripcion: string | null; precio: number | null; subtotal: number | null }> = this.selectedItems().map((item) => ({
       cantidad: item.cantidad,
       descripcion: item.nombre,
       precio: item.precio,
@@ -527,12 +483,7 @@ export class VentaRegisterComponent {
     }));
 
     // Ensure exactly up to 18 lines (C20..C37)
-    const padded: Array<{
-      cantidad: number | null;
-      descripcion: string | null;
-      precio: number | null;
-      subtotal: number | null;
-    }> = Array.from({ length: 18 }).map(
+    const padded: Array<{ cantidad: number | null; descripcion: string | null; precio: number | null; subtotal: number | null }> = Array.from({ length: 18 }).map(
       (_, idx) =>
         lineas[idx] ?? {
           cantidad: null,
@@ -550,9 +501,7 @@ export class VentaRegisterComponent {
         total: this.totalPagar(),
       });
     } catch (err) {
-      this.errorMessage.set(
-        'Error generando proforma: ' + (err instanceof Error ? err.message : String(err)),
-      );
+      this.errorMessage.set('Error generando proforma: ' + (err instanceof Error ? err.message : String(err)));
     }
   }
 
@@ -622,17 +571,11 @@ export class VentaRegisterComponent {
     return Math.max(normalizedStock, normalizedCantidad);
   }
 
-  private setStockLimitMessage(
-    nombre: string,
-    stockDisponible: number,
-    isReciclado: unknown,
-  ): void {
+  private setStockLimitMessage(nombre: string, stockDisponible: number, isReciclado: unknown): void {
     const stock = this.normalizeStock(stockDisponible, isReciclado);
     const unidad = this.resolveReciclado(isReciclado) ? 'm' : 'u';
 
-    this.errorMessage.set(
-      `Stock insuficiente para ${nombre}. Maximo disponible: ${stock} ${unidad}.`,
-    );
+    this.errorMessage.set(`Stock insuficiente para ${nombre}. Maximo disponible: ${stock} ${unidad}.`);
   }
 
   private resolveReciclado(value: unknown): boolean {
