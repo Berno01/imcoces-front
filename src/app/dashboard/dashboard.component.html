@@ -1,0 +1,213 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">Dashboard</h1>
+
+    <div class="filters" [formGroup]="filtersForm">
+      <div class="filter-group">
+        <label for="id_sucursal">Sucursal</label>
+        <select id="id_sucursal" formControlName="id_sucursal">
+          @for (suc of sucursales(); track suc.id_sucursal) {
+            <option [value]="suc.id_sucursal">{{ suc.nombre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="fecha_inicio">Fecha Inicio</label>
+        <input id="fecha_inicio" type="date" formControlName="fecha_inicio" />
+      </div>
+
+      <div class="filter-group">
+        <label for="fecha_fin">Fecha Fin</label>
+        <input id="fecha_fin" type="date" formControlName="fecha_fin" />
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Cargando...</div>
+  }
+
+  @if (dashboardData()) {
+    <div class="stats-grid">
+      <!-- Ventas Totales -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <h3 class="stat-card-title">Ventas Totales</h3>
+          <span class="stat-card-icon">💵</span>
+        </div>
+        <p class="stat-card-value">
+          {{ dashboardData()?.ventas?.total_ventas_monto | number: '1.2-2' }} Bs
+        </p>
+        <div class="stat-card-meta">
+          <span class="stat-card-count">{{ dashboardData()?.ventas?.total_ventas }} ventas</span>
+        </div>
+      </div>
+
+      <!-- Cuentas por Cobrar -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <h3 class="stat-card-title">Cuentas por Cobrar</h3>
+          <span class="stat-card-icon">📋</span>
+        </div>
+        <p class="stat-card-value">
+          {{ dashboardData()?.obras?.total_saldo_pendiente | number: '1.2-2' }} Bs
+        </p>
+        <div class="stat-card-meta">
+          <span class="stat-card-count">
+            De {{ dashboardData()?.obras?.total_obras_activas }} obras activas
+          </span>
+        </div>
+      </div>
+
+      <!-- Obras en Curso -->
+      <div class="stat-card alert">
+        <div class="stat-card-header">
+          <h3 class="stat-card-title">Obras en Curso</h3>
+          <span class="stat-card-icon">🏗️</span>
+        </div>
+        <p class="stat-card-value">
+          {{ dashboardData()?.obras?.total_obras_activas }}
+        </p>
+        <div class="stat-card-meta">
+          <span class="stat-card-alert">⚠️</span>
+        </div>
+      </div>
+
+      <!-- Ventas Realizadas -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <h3 class="stat-card-title">Ventas Realizadas</h3>
+          <span class="stat-card-icon">🧾</span>
+        </div>
+        <p class="stat-card-value">
+          {{ dashboardData()?.ventas?.total_ventas }}
+        </p>
+        <div class="stat-card-meta">
+          <span class="stat-card-count">
+            {{ dashboardData()?.ventas?.total_ventas_monto | number: '1.2-2' }} Bs
+          </span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="charts-grid">
+    <div class="chart-card large">
+      <div class="chart-header">
+        <h3 class="chart-title">Rentabilidad por Obra</h3>
+      </div>
+      <canvas #obrasProfitChart></canvas>
+    </div>
+
+    <div class="chart-card small">
+      <div class="chart-header">
+        <h3 class="chart-title">Distribución de Ingresos Materiales</h3>
+      </div>
+      <canvas #ingresosMaterialesChart></canvas>
+    </div>
+  </div>
+
+  @if (dashboardData()) {
+    <div class="secondary-grid">
+      <div class="deudores-card large">
+        <div class="chart-header deudores-header">
+          <div>
+            <h3 class="chart-title">Deudores</h3>
+            <p class="deudores-subtitle">
+              Pagos pactados con fecha de hoy o anterior que aún están pendientes.
+            </p>
+          </div>
+
+          <div class="deudores-counter">
+            <span class="deudores-counter-label">Pendientes</span>
+            <strong>{{ dashboardData()?.deudores?.length || 0 }}</strong>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          @if ((dashboardData()?.deudores?.length || 0) === 0) {
+            <div class="empty-state">No hay deudores vencidos o del día de hoy.</div>
+          } @else {
+            <table class="deudores-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Obra</th>
+                  <th>Fecha pactada</th>
+                  <th>Monto</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (deudor of dashboardData()?.deudores ?? []; track deudor.id_obra_pago) {
+                  <tr>
+                    <td>
+                      <div class="cell-primary">{{ deudor.nombre_cliente }}</div>
+                      <div class="cell-secondary">{{ deudor.num_cel }}</div>
+                    </td>
+                    <td>
+                      <div class="cell-primary">{{ deudor.nombre_obra }}</div>
+                    </td>
+                    <td>{{ formatDate(deudor.fecha_pactada) }}</td>
+                    <td>{{ formatMoney(deudor.monto_pactado) }}</td>
+                    <td>
+                      <span class="estado-badge" [class.hoy]="deudor.estado === 'Vence hoy'">
+                        {{ deudor.estado }}
+                      </span>
+                    </td>
+                    <td>
+                      <button type="button" class="contact-button" (click)="contactar(deudor.num_cel)">
+                        Contactarlo
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </div>
+      </div>
+
+      <div class="stock-critical-card">
+        <div class="chart-header stock-critical-header">
+          <div>
+            <h3 class="chart-title">Stock Critico</h3>
+            <p class="stock-critical-subtitle">
+              Materiales con stock por debajo del umbral configurado en el backend.
+            </p>
+          </div>
+
+          <div class="stock-critical-counter">
+            <span class="stock-critical-counter-label">Items</span>
+            <strong>{{ dashboardData()?.stock_critico?.length || 0 }}</strong>
+          </div>
+        </div>
+
+        <div class="stock-critical-list">
+          @if ((dashboardData()?.stock_critico?.length || 0) === 0) {
+            <div class="empty-state stock-empty-state">No hay materiales en stock crítico.</div>
+          } @else {
+            @for (material of dashboardData()?.stock_critico ?? []; track material.id_material + '-' + material.id_sucursal) {
+              <div class="stock-critical-item">
+                <div class="stock-critical-main">
+                  <div class="cell-primary stock-critical-name">{{ material.nombre_material }}</div>
+                  <div class="stock-critical-meta">
+                    <span>{{ material.nombre_categoria }}</span>
+                    <span>{{ getSucursalNombre(material.id_sucursal) }}</span>
+                  </div>
+                </div>
+
+                <div class="stock-critical-qty">
+                  <span>Cantidad</span>
+                  <strong>{{ material.cantidad | number: '1.0-0' }}</strong>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

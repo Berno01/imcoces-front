@@ -13,6 +13,7 @@ import { ObraHomeComponent } from './obra/obra-home.component';
 import { UsuarioListComponent } from './personal/usuario-list.component';
 import { VentaFlowComponent } from './ventas/venta-flow.component';
 import { UnauthorizedComponent } from './pages/unauthorized.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 export const routes: Routes = [
   {
@@ -34,7 +35,7 @@ export const routes: Routes = [
 
       {
         path: 'dashboard',
-        component: ModulePlaceholderComponent,
+        component: DashboardComponent,
         canActivate: [roleGuard],
         data: { title: 'Dashboard', allowedRoles: [1, 2] },
       },
