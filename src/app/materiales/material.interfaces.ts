@@ -30,6 +30,7 @@ export interface Material {
   id_categoria: number;
   nombre_categoria?: string;
   id_color: number;
+  codigo_color: string;
   nombre_color?: string;
   costo: number;
   precio: number;

@@ -134,6 +134,16 @@ export class IngresoMaterialCatalogComponent implements OnInit {
     return this.categoriasById()[categoriaId] ?? `Categoria ${categoriaId}`;
   }
 
+  getMaterialColor(material: IngresoMaterialOption): string {
+    const rawColor = (material.codigo_color ?? '').trim();
+    if (!rawColor) {
+      return '#e2e8f0';
+    }
+
+    const normalized = rawColor.startsWith('#') ? rawColor : `#${rawColor}`;
+    return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized : '#e2e8f0';
+  }
+
   getStockTotal(material: IngresoMaterialOption): number {
     const total = Number(material.cantidad);
     if (Number.isFinite(total)) {

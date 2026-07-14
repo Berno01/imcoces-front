@@ -85,9 +85,25 @@
           (keydown.enter)="addMaterial(material, $event)"
           (keydown.space)="addMaterial(material, $event); $event.preventDefault()"
         >
-          <p class="mb-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-400">
-            COD: {{ material.codigo }}
-          </p>
+          <div class="mb-2 flex items-center justify-between gap-2">
+            <p class="text-xs font-bold uppercase tracking-[0.1em] text-slate-400">
+              COD: {{ material.codigo }}
+            </p>
+
+            <div class="flex items-center gap-2 rounded-full bg-slate-50 px-2 py-1">
+              <span
+                class="h-3 w-3 shrink-0 rounded-full border border-slate-200"
+                [style.backgroundColor]="getMaterialColor(material)"
+                [attr.title]="material.nombre_color || 'Sin color'"
+              ></span>
+              <span
+                class="max-w-24 truncate text-[11px] font-medium text-slate-500"
+                [attr.title]="material.nombre_color || 'Sin color'"
+              >
+                {{ material.nombre_color || 'Sin color' }}
+              </span>
+            </div>
+          </div>
 
           <p class="mt-1 min-h-[48px] text-xl font-semibold leading-6 text-slate-900">
             {{ material.nombre }}

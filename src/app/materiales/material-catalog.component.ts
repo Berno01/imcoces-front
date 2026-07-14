@@ -186,6 +186,17 @@ export class MaterialCatalogComponent implements OnInit {
     return material.nombre_categoria ?? 'Sin categoria';
   }
 
+  getMaterialColor(material: Material): string {
+    const rawColor = material.codigo_color?.trim();
+
+    if (!rawColor) {
+      return '#e2e8f0';
+    }
+
+    const normalized = rawColor.startsWith('#') ? rawColor : `#${rawColor}`;
+    return /^#[0-9a-fA-F]{6}$/.test(normalized) ? normalized : '#e2e8f0';
+  }
+
   formatMoney(value: number): string {
     return this.moneyFormatter.format(value);
   }
