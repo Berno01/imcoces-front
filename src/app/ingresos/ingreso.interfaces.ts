@@ -30,6 +30,7 @@ export interface IngresoDetalle {
   nombre: string;
   costo_unitario: number;
   cantidad: number;
+  codigo?: string;
 }
 
 export interface IngresoDetallePayload {

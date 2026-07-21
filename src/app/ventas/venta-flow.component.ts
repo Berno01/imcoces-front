@@ -153,27 +153,11 @@ export class VentaFlowComponent {
         nombre_categoria: this.toText(material?.nombre_categoria),
         medida: this.toText(material?.medida),
         is_reciclado: isReciclado,
-        stock_disponible: this.resolveStockDisponible(material?.cantidad, item.cantidad, isReciclado),
         cantidad: this.normalizeCantidad(item.cantidad, isReciclado),
         precio: this.normalizeMoney(item.precio),
         costo: this.normalizeMoney(item.costo),
       };
     });
-  }
-
-  private resolveStockDisponible(
-    stockDisponible: unknown,
-    cantidadActual: unknown,
-    isReciclado: unknown,
-  ): number {
-    const normalizedStock = this.normalizeStock(stockDisponible, isReciclado);
-    const normalizedCantidad = this.normalizeCantidad(cantidadActual, isReciclado);
-
-    if (normalizedStock <= 0) {
-      return normalizedCantidad;
-    }
-
-    return Math.max(normalizedStock, normalizedCantidad);
   }
 
   private resolveCliente(detalle: VentaDetalleItem[], venta: VentaResumen): string {
@@ -208,20 +192,6 @@ export class VentaFlowComponent {
 
     const integer = Math.floor(cantidad);
     return integer > 0 ? integer : 1;
-  }
-
-  private normalizeStock(value: unknown, isReciclado: unknown): number {
-    const stock = this.toSafeNumber(value);
-
-    if (stock <= 0) {
-      return 0;
-    }
-
-    if (this.resolveReciclado(isReciclado)) {
-      return Number(stock.toFixed(2));
-    }
-
-    return Math.floor(stock);
   }
 
   private resolveReciclado(value: unknown): boolean {

@@ -1,5 +1,5 @@
 import { Component, DestroyRef, ViewChild, inject, signal } from '@angular/core';
-import { finalize } from 'rxjs';
+import { finalize, firstValueFrom } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { IngresoDetalle, IngresoResumen } from './ingreso.interfaces';
@@ -10,6 +10,7 @@ import {
   IngresoSavedEvent,
 } from './ingreso-register.component';
 import { IngresoService } from './ingreso.service';
+import { MaterialService } from '../materiales/material.service';
 
 type IngresoViewMode = 'history' | 'form';
 type ToastKind = 'success' | 'error';
@@ -27,6 +28,7 @@ interface ToastState {
 })
 export class IngresoFlowComponent {
   private readonly ingresoService = inject(IngresoService);
+  private readonly materialService = inject(MaterialService);
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild(IngresoHistoryComponent)
@@ -43,6 +45,8 @@ export class IngresoFlowComponent {
 
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
+  private codigoByMaterialId: Record<number, string> = {};
+
   openCreateForm(): void {
     this.registerMode.set('create');
     this.editingIngresoId.set(null);
@@ -54,26 +58,25 @@ export class IngresoFlowComponent {
   openEditForm(ingreso: IngresoResumen): void {
     this.loadingEditData.set(true);
 
-    this.ingresoService
-      .getIngresoDetalle(ingreso.id_ingreso)
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.loadingEditData.set(false)),
-      )
-      .subscribe({
-        next: (response) => {
-          this.registerMode.set('edit');
-          this.editingIngresoId.set(ingreso.id_ingreso);
-          this.fixedSucursalId.set(this.toSafeNumber(ingreso.id_sucursal));
-          this.draftItems.set(this.mapDetalleToDraftItems(response.data ?? []));
-          this.viewMode.set('form');
-        },
-        error: () => {
-          this.showToast({
-            kind: 'error',
-            message: 'No se pudo cargar el detalle para editar el ingreso.',
-          });
-        },
+    Promise.all([
+      firstValueFrom(this.ingresoService.getIngresoDetalle(ingreso.id_ingreso)),
+      this.loadCodigoByMaterialId(),
+    ])
+      .then(([detalleResponse]) => {
+        this.registerMode.set('edit');
+        this.editingIngresoId.set(ingreso.id_ingreso);
+        this.fixedSucursalId.set(this.toSafeNumber(ingreso.id_sucursal));
+        this.draftItems.set(this.mapDetalleToDraftItems(detalleResponse.data ?? []));
+        this.viewMode.set('form');
+      })
+      .catch(() => {
+        this.showToast({
+          kind: 'error',
+          message: 'No se pudo cargar el detalle para editar el ingreso.',
+        });
+      })
+      .finally(() => {
+        this.loadingEditData.set(false);
       });
   }
 
@@ -144,20 +147,38 @@ export class IngresoFlowComponent {
   private mapDetalleToDraftItems(detalle: IngresoDetalle[]): IngresoDraftItem[] {
     return detalle.map((item) => {
       const materialId = this.toSafeNumber(item.id_material);
-      const anyDetalle = item as unknown as Record<string, unknown>;
-      const codigoFromApi = anyDetalle['codigo'];
 
       return {
         id_material: materialId,
-        codigo:
-          typeof codigoFromApi === 'string' && codigoFromApi.trim().length > 0
-            ? codigoFromApi
-            : `MAT-${materialId}`,
+        codigo: this.resolveCodigo(item, materialId),
         nombre: item.nombre,
         cantidad: this.normalizePositiveInteger(item.cantidad),
         costo_unitario: this.normalizePositiveDecimal(item.costo_unitario),
       };
     });
+  }
+
+  private async loadCodigoByMaterialId(): Promise<void> {
+    const response = await firstValueFrom(this.materialService.getMateriales());
+    const map: Record<number, string> = {};
+
+    for (const material of response.data ?? []) {
+      const id = this.toSafeNumber(material.id_material);
+      const codigo = (material.codigo ?? '').trim();
+      if (id > 0 && codigo.length > 0) {
+        map[id] = codigo;
+      }
+    }
+
+    this.codigoByMaterialId = map;
+  }
+
+  private resolveCodigo(item: IngresoDetalle, materialId: number): string {
+    if (typeof item.codigo === 'string' && item.codigo.trim().length > 0) {
+      return item.codigo.trim();
+    }
+
+    return this.codigoByMaterialId[materialId] ?? '';
   }
 
   private showToast(toast: ToastState): void {
