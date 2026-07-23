@@ -7,9 +7,13 @@ import { IngresoHistoryComponent } from './ingresos/ingreso-history.component';
 import { LayoutComponent } from './layout/layout.component';
 import { MaterialCatalogComponent } from './materiales/material-catalog.component';
 import { ModulePlaceholderComponent } from './pages/module-placeholder.component';
+import { ObraDeudoresComponent } from './obra/obra-deudores.component';
+import { ObraDetailComponent } from './obra/obra-detail.component';
+import { ObraHomeComponent } from './obra/obra-home.component';
 import { UsuarioListComponent } from './personal/usuario-list.component';
 import { VentaFlowComponent } from './ventas/venta-flow.component';
 import { UnauthorizedComponent } from './pages/unauthorized.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 export const routes: Routes = [
   {
@@ -31,7 +35,7 @@ export const routes: Routes = [
 
       {
         path: 'dashboard',
-        component: ModulePlaceholderComponent,
+        component: DashboardComponent,
         canActivate: [roleGuard],
         data: { title: 'Dashboard', allowedRoles: [1, 2] },
       },
@@ -81,22 +85,28 @@ export const routes: Routes = [
       },
 
       {
-        path: 'obras',
+        path: 'obra',
         canActivate: [roleGuard],
-        component: ModulePlaceholderComponent,
-        data: { title: 'Obras', allowedRoles: [1, 2] },
+        component: ObraHomeComponent,
+        data: { title: 'Obra', allowedRoles: [1, 2] },
       },
       {
-        path: 'obras/obras',
+        path: 'obra/deudores',
         canActivate: [roleGuard],
-        component: ModulePlaceholderComponent,
-        data: { title: 'Obras', allowedRoles: [1, 2] },
+        component: ObraDeudoresComponent,
+        data: { title: 'Deudores de Obra', allowedRoles: [1, 2] },
       },
       {
-        path: 'obras/control-de-deudores',
+        path: 'obra/detalle/pagos/:id_obra',
         canActivate: [roleGuard],
-        component: ModulePlaceholderComponent,
-        data: { title: 'Control de Deudores', allowedRoles: [1, 2] },
+        component: ObraDetailComponent,
+        data: { title: 'Detalle Obra', allowedRoles: [1, 2] },
+      },
+      {
+        path: 'obra/detalle/:id_obra',
+        canActivate: [roleGuard],
+        component: ObraDetailComponent,
+        data: { title: 'Detalle Obra', allowedRoles: [1, 2] },
       },
 
       {
